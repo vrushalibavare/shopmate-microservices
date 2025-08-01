@@ -7,6 +7,9 @@ echo "Building and pushing images to ECR..."
 echo "Account ID: $ACCOUNT_ID"
 echo "Region: $REGION"
 
+# Setup buildx for multi-arch builds
+./setup-buildx.sh
+
 # Login to ECR
 aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com
 
@@ -14,11 +17,13 @@ aws ecr get-login-password --region $REGION | docker login --username AWS --pass
 echo "Using ECR repositories created by Terraform..."
 
 # Build and push images
+services=("product-service" "cart-service" "order-service" "frontend-service")
+
 for service in "${services[@]}"; do
     echo "Building and pushing $service..."
     
-    # Build image
-    docker build -t shopmate/$service:latest ./services/$service
+    # Build multi-arch image for x86_64 (compatible with t3.small)
+    docker buildx build --platform linux/amd64 -t shopmate/$service:latest ./services/$service --load
     
     # Tag for ECR
     docker tag shopmate/$service:latest $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/shopmate/$service:latest
