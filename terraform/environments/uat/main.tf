@@ -1,10 +1,7 @@
-module "shopmate" {
-  source = "../../"
+module "eks" {
+  source = "../../eks"
   
-  environment        = "uat"
-  aws_region         = "ap-southeast-1"
-  app_count          = 2
-  domain_name        = "shopmate.uat.sctp-sandbox.com"
-  route53_zone_name  = "sctp-sandbox.com"
-  create_route53_zone = false  # Using existing zone
+  aws_region   = "ap-southeast-1"
+  cluster_name = "shopmate-uat"
+  environment  = "uat"
 }

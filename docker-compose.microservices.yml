@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  product-service:
+    build: ./services/product-service
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - AWS_REGION=ap-southeast-1
+      - PRODUCTS_TABLE=shopmate-products-dev
+    networks:
+      - shopmate-network
+
+  cart-service:
+    build: ./services/cart-service
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - AWS_REGION=ap-southeast-1
+      - CARTS_TABLE=shopmate-carts-dev
+      - PRODUCT_SERVICE_URL=http://product-service:3001
+    depends_on:
+      - product-service
+    networks:
+      - shopmate-network
+
+  order-service:
+    build: ./services/order-service
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - AWS_REGION=ap-southeast-1
+      - ORDERS_TABLE=shopmate-orders-dev
+      - CART_SERVICE_URL=http://cart-service:3002
+      - PRODUCT_SERVICE_URL=http://product-service:3001
+    depends_on:
+      - cart-service
+      - product-service
+    networks:
+      - shopmate-network
+
+  frontend-service:
+    build: ./services/frontend-service
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PRODUCT_SERVICE_URL=http://product-service:3001
+      - CART_SERVICE_URL=http://cart-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+    depends_on:
+      - product-service
+      - cart-service
+      - order-service
+    networks:
+      - shopmate-network
+
+networks:
+  shopmate-network:
+    driver: bridge
